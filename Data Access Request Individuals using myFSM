@@ -1,0 +1,485 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Calendar, 
+  Database, 
+  FileText, 
+  Shield, 
+  User, 
+  ChevronDown, 
+  AlertCircle,
+  CheckCircle2,
+  Menu,
+  Search,
+  Bell,
+  Lock,
+  Server,
+  Tag,
+  ArrowRight,
+  ShieldCheck,
+  Mail,
+  Printer
+} from 'lucide-react';
+
+const WestpacRed = '#DA1710';
+
+export default function App() {
+  const [currentStep, setCurrentStep] = useState('form'); // 'form', 'undertaking', 'success'
+  const [isSearching, setIsSearching] = useState(false);
+  const [requestNumber, setRequestNumber] = useState('');
+  
+  const [formData, setFormData] = useState({
+    justification: '',
+    tableName: '',
+    warehouse: 'EDW/SGDW',
+    requestType: 'individual',
+    role: '',
+    criticality: 'Medium',
+    startDate: '',
+    endDate: '',
+    schema: '',
+    dataOwner: '',
+    classification: ''
+  });
+
+  // Effect to simulate auto-population based on specific Table Name inputs
+  useEffect(() => {
+    const table = formData.tableName.trim().toUpperCase();
+    
+    if (table.length > 2) {
+      setIsSearching(true);
+      const timer = setTimeout(() => {
+        let mockSchema = 'tdp7dbc.teradata.westpac.com.au';
+        let mockClass = 'General Access data';
+        let mockOwner = 'Jack Black'; // Default owner for tdp7 server
+
+        // Specific mapping logic
+        if (table === 'LOAN_ACCT_APD1') {
+          mockSchema = 'tdp7dbc.teradata.westpac.com.au';
+          mockClass = 'General Access data';
+          mockOwner = 'Jack Black';
+        } else if (table === 'LOAN_ACCT_APD2') {
+          mockSchema = 'tdp7dbc.teradata.westpac.com.au';
+          mockClass = 'PII data';
+          mockOwner = 'Jack Black';
+        } else if (table === 'LOAN_ACCT_PRIN') {
+          mockSchema = 'tdp8dbc.teradata.westpac.com.au';
+          mockClass = 'HP data';
+          mockOwner = 'John Smyth'; // Mapping John Smyth to tdp8 server
+        } else {
+          // Fallback logic for other names
+          if (table.includes('CUST')) mockClass = 'PII data';
+          if (table.includes('SEC')) mockClass = 'HP data';
+          
+          // Logic to ensure owner matches schema even in fallback
+          if (mockSchema.includes('tdp8')) mockOwner = 'John Smyth';
+          else mockOwner = 'Jack Black';
+        }
+
+        setFormData(prev => ({
+          ...prev,
+          schema: mockSchema,
+          dataOwner: mockOwner,
+          classification: mockClass
+        }));
+        setIsSearching(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setFormData(prev => ({ ...prev, schema: '', dataOwner: '', classification: '' }));
+      setIsSearching(false);
+    }
+  }, [formData.tableName]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleInitialSubmit = (e) => {
+    e.preventDefault();
+    setCurrentStep('undertaking');
+    window.scrollTo(0, 0);
+  };
+
+  const handleAcceptUndertaking = () => {
+    const randomReq = `REQ-${Math.floor(100000 + Math.random() * 900000)}`;
+    setRequestNumber(randomReq);
+    setCurrentStep('success');
+    window.scrollTo(0, 0);
+  };
+
+  const handleDenyUndertaking = () => {
+    setCurrentStep('form');
+    window.scrollTo(0, 0);
+  };
+
+  const handleReset = () => {
+    setFormData({
+      justification: '',
+      tableName: '',
+      warehouse: 'EDW/SGDW',
+      requestType: 'individual',
+      role: '',
+      criticality: 'Medium',
+      startDate: '',
+      endDate: '',
+      schema: '',
+      dataOwner: '',
+      classification: ''
+    });
+    setCurrentStep('form');
+    window.scrollTo(0, 0);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+      {/* Global Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 shadow-md">
+        <div style={{ backgroundColor: WestpacRed }} className="h-16 flex items-center justify-between px-4 lg:px-8">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-white">
+               <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+                <path d="M17.5 2H6.5C3.5 2 2 4.5 2 7.5V17.5C2 20.5 4.5 22 7.5 22H17.5C20.5 22 22 20.5 22 17.5V7.5C22 4.5 20.5 2 17.5 2ZM11.2 16.8L9.5 13.5L7.8 16.8L5.5 12.5L8.5 6.5H10.5L13.5 12.5L11.2 16.8ZM18.5 12.5L16.2 16.8L14.5 13.5L12.8 16.8L10.5 12.5L13.5 6.5H15.5L18.5 12.5Z" />
+              </svg>
+              <span className="text-xl font-bold tracking-tight hidden md:block">Westpac Group</span>
+              <span className="text-white/50 text-xl font-light hidden md:block">| Data Governance</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-6">
+            <button className="text-white hover:text-red-100 transition-colors">
+              <Search className="w-5 h-5" />
+            </button>
+            <button className="text-white hover:text-red-100 transition-colors relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-400 rounded-full"></span>
+            </button>
+            <div className="flex items-center space-x-2 text-white border-l border-red-800 pl-6">
+              <div className="w-8 h-8 rounded-full bg-red-800 flex items-center justify-center text-xs font-bold border border-red-600">
+                AS
+              </div>
+              <span className="text-sm font-medium hidden sm:block">Alok Singh</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white border-b border-slate-200 px-4 lg:px-8 py-3 flex items-center text-sm text-slate-500">
+          <span className="hover:text-red-700 cursor-pointer transition-colors">Home</span>
+          <span className="mx-2">/</span>
+          <span className="hover:text-red-700 cursor-pointer transition-colors">Data Services</span>
+          <span className="mx-2">/</span>
+          <span className="text-slate-800 font-semibold">
+            {currentStep === 'form' ? 'Access Request' : currentStep === 'undertaking' ? 'Undertaking' : 'Confirmation'}
+          </span>
+        </div>
+      </header>
+
+      <main className="pt-32 pb-16 px-4 md:px-8 max-w-5xl mx-auto">
+        
+        {/* STEP 1: INITIAL FORM */}
+        {currentStep === 'form' && (
+          <div className="animate-fade-in">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-800 mb-2">New Data Access Request</h1>
+              <p className="text-slate-600">
+                Submit a request for access to restricted datasets within the Enterprise Data Warehouse.
+              </p>
+            </div>
+
+            <form onSubmit={handleInitialSubmit} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+              <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-slate-800 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-slate-400" />
+                  Request Details
+                </h2>
+                <span className="text-xs font-medium text-slate-500 bg-slate-200 px-2 py-1 rounded">Draft</span>
+              </div>
+
+              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                <div className="md:col-span-2">
+                  <label htmlFor="justification" className="block text-sm font-bold text-slate-700 mb-2">
+                    Data Request Justification <span className="text-red-600">*</span>
+                  </label>
+                  <textarea
+                    id="justification"
+                    name="justification"
+                    required
+                    rows={3}
+                    className="w-full px-4 py-3 rounded border border-slate-300 focus:border-[#DA1710] focus:ring-1 focus:ring-[#DA1710] outline-none transition-all placeholder-slate-400 text-slate-700 text-sm"
+                    placeholder="Enter detailed justification..."
+                    value={formData.justification}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="tableName" className="block text-sm font-bold text-slate-700 mb-2">
+                    Table Name <span className="text-red-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <Database className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      id="tableName"
+                      name="tableName"
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 rounded border border-slate-300 focus:border-[#DA1710] focus:ring-1 focus:ring-[#DA1710] outline-none transition-all text-slate-700 text-sm"
+                      placeholder="e.g. LOAN_ACCT_APD1"
+                      value={formData.tableName}
+                      onChange={handleInputChange}
+                    />
+                    {isSearching && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin h-4 w-4 border-2 border-red-600 rounded-full border-t-transparent"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="warehouse" className="block text-sm font-bold text-slate-700 mb-2">
+                    Data Warehouse <span className="text-red-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="warehouse"
+                      name="warehouse"
+                      className="w-full px-4 py-2.5 rounded border border-slate-300 focus:border-[#DA1710] focus:ring-1 focus:ring-[#DA1710] outline-none transition-all text-slate-700 text-sm appearance-none bg-white"
+                      value={formData.warehouse}
+                      onChange={handleInputChange}
+                    >
+                      <option value="EDW/SGDW">EDW / SGDW</option>
+                      <option value="WGDW">WGDW</option>
+                      <option value="ADAPT">ADAPT</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Auto-populated Fields */}
+                <div className={`transition-all duration-500 ${formData.schema ? 'opacity-100' : 'opacity-60'}`}>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center">
+                    <Server className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                    Schema / Database Name
+                  </label>
+                  <div className="relative">
+                    <input readOnly className="w-full px-4 py-2.5 rounded border border-slate-200 bg-slate-50 text-slate-500 text-sm" value={formData.schema} placeholder="Auto-populated..." />
+                    <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
+                  </div>
+                </div>
+
+                <div className={`transition-all duration-500 ${formData.dataOwner ? 'opacity-100' : 'opacity-60'}`}>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center">
+                    <User className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                    Data Owner Name
+                  </label>
+                  <div className="relative">
+                    <input readOnly className="w-full px-4 py-2.5 rounded border border-slate-200 bg-slate-50 text-slate-500 text-sm" value={formData.dataOwner} placeholder="Auto-populated..." />
+                    <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
+                  </div>
+                </div>
+
+                 <div className={`transition-all duration-500 ${formData.classification ? 'opacity-100' : 'opacity-60'}`}>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center">
+                    <Shield className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                    Table Classification
+                  </label>
+                  <div className="relative">
+                     <input
+                      readOnly
+                      className={`w-full px-4 py-2.5 rounded border text-sm font-medium
+                        ${formData.classification.includes('PII') ? 'bg-red-50 border-red-100 text-red-700' : 
+                          formData.classification.includes('HP') ? 'bg-orange-50 border-orange-100 text-orange-700' :
+                          'bg-slate-50 border-slate-200 text-slate-600'}
+                      `}
+                      value={formData.classification}
+                      placeholder="Auto-populated..."
+                    />
+                    <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="role" className="block text-sm font-bold text-slate-700 mb-2">
+                    Role Type <span className="text-red-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <select id="role" name="role" required className="w-full pl-10 pr-10 py-2.5 rounded border border-slate-300 focus:border-[#DA1710] focus:ring-1 focus:ring-[#DA1710] outline-none transition-all text-slate-700 text-sm appearance-none bg-white" value={formData.role} onChange={handleInputChange}>
+                      <option value="" disabled>Select Role...</option>
+                      <option value="Data Analyst">Data Analyst</option>
+                      <option value="Data Engineer">Data Engineer</option>
+                      <option value="Business User">Business User</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  </div>
+                </div>
+
+                 <div>
+                  <span className="block text-sm font-bold text-slate-700 mb-3">Request Type <span className="text-red-600">*</span></span>
+                  <div className="flex space-x-6">
+                    <label className="flex items-center cursor-pointer group">
+                      <input type="radio" name="requestType" value="individual" checked={formData.requestType === 'individual'} onChange={handleInputChange} className="h-4 w-4 text-[#DA1710] border-slate-300" />
+                      <span className="ml-2 text-sm text-slate-700">Individual ID</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer group">
+                      <input type="radio" name="requestType" value="functional" checked={formData.requestType === 'functional'} onChange={handleInputChange} className="h-4 w-4 text-[#DA1710] border-slate-300" />
+                      <span className="ml-2 text-sm text-slate-700">Functional Role</span>
+                    </label>
+                  </div>
+                </div>
+
+                <hr className="md:col-span-2 border-slate-100" />
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-3">Criticality <span className="text-red-600">*</span></label>
+                  <div className="flex flex-col sm:flex-row w-full sm:w-auto bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    {['Low', 'Medium', 'High', 'Critical'].map((level) => (
+                      <button key={level} type="button" onClick={() => setFormData({ ...formData, criticality: level })} className={`flex-1 py-2 px-6 rounded-md text-sm font-medium transition-all duration-200 ${formData.criticality === level ? 'bg-white text-[#DA1710] shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="startDate" className="block text-sm font-bold text-slate-700 mb-2">Start Date <span className="text-red-600">*</span></label>
+                  <input type="date" id="startDate" name="startDate" required className="w-full px-4 py-2.5 rounded border border-slate-300 focus:border-[#DA1710] focus:ring-1 focus:ring-[#DA1710] outline-none text-slate-700 text-sm" value={formData.startDate} onChange={handleInputChange} />
+                </div>
+
+                <div>
+                  <label htmlFor="endDate" className="block text-sm font-bold text-slate-700 mb-2">End Date <span className="text-red-600">*</span></label>
+                  <input type="date" id="endDate" name="endDate" required className="w-full px-4 py-2.5 rounded border border-slate-300 focus:border-[#DA1710] focus:ring-1 focus:ring-[#DA1710] outline-none text-slate-700 text-sm" value={formData.endDate} onChange={handleInputChange} />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 px-8 py-6 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
+                <button type="button" onClick={handleReset} className="w-full sm:w-auto px-6 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-md hover:bg-slate-100 transition-colors text-sm">Cancel</button>
+                <button type="submit" className="w-full sm:w-auto px-10 py-2.5 bg-[#DA1710] text-white font-bold rounded-md hover:bg-[#b0130d] shadow-md flex items-center justify-center transition-colors text-sm">
+                  Proceed to Undertaking <ArrowRight className="ml-2 w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* STEP 2: UNDERTAKING */}
+        {currentStep === 'undertaking' && (
+          <div className="animate-fade-in max-w-3xl mx-auto">
+             <div className="mb-8 text-center">
+              <ShieldCheck className="w-16 h-16 text-[#DA1710] mx-auto mb-4" />
+              <h1 className="text-3xl font-bold text-slate-800 mb-2">General Access Undertaking</h1>
+              <p className="text-slate-600">Please review and accept the following data usage terms.</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden mb-8">
+              <div className="p-8">
+                <div className="prose prose-slate max-w-none text-sm text-slate-700 leading-relaxed">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">Terms of Data Access</h3>
+                  <p className="mb-4">
+                    In requesting access to <strong>{formData.tableName || 'the specified data'}</strong> within the {formData.warehouse} environment, I, <strong>Alok Singh</strong>, hereby undertake and agree to the following:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-3 mb-6">
+                    <li>I will use the data solely for the business purpose stated in my justification: <em>"{formData.justification || 'N/A'}"</em>.</li>
+                    <li>I will not download, export, or store this data on unauthorized devices or personal storage.</li>
+                    <li>I understand that this data may contain <strong>{formData.classification}</strong> information and must be handled in accordance with the Westpac Data Privacy Framework.</li>
+                    <li>Access is granted for a limited period (from {formData.startDate} to {formData.endDate}) and will be automatically revoked upon expiry.</li>
+                    <li>I will not share my login credentials or provide data access to any unauthorized third party or colleague.</li>
+                    <li>Any breach of these conditions may result in disciplinary action in accordance with Group Policy.</li>
+                  </ul>
+                  <div className="bg-slate-50 p-4 rounded-md border border-slate-200 text-xs text-slate-500 italic">
+                    By clicking 'Accept', you confirm that you have read and understood the Group Data Governance Policy and the specific handling requirements for {formData.classification} data.
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 px-8 py-6 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-center justify-center gap-4">
+                <button 
+                  onClick={handleDenyUndertaking}
+                  className="w-full sm:w-auto px-8 py-2.5 border border-slate-300 text-slate-600 font-semibold rounded-md hover:bg-slate-100 transition-colors text-sm"
+                >
+                  Deny & Go Back
+                </button>
+                <button 
+                  onClick={handleAcceptUndertaking}
+                  className="w-full sm:w-auto px-12 py-2.5 bg-[#DA1710] text-white font-bold rounded-md hover:bg-[#b0130d] shadow-lg transition-colors text-sm"
+                >
+                  Accept & Submit Request
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: SUCCESS LANDING */}
+        {currentStep === 'success' && (
+          <div className="animate-scale-in max-w-2xl mx-auto text-center">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-12 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-full h-2 bg-[#DA1710]"></div>
+              
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-12 h-12 text-green-600" />
+              </div>
+
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">Request Submitted Successfully</h1>
+              <div className="inline-block bg-slate-100 px-4 py-2 rounded-full text-slate-600 font-mono text-sm mb-8">
+                Reference ID: <span className="font-bold text-slate-900">{requestNumber}</span>
+              </div>
+
+              <div className="space-y-6 text-slate-600 max-w-md mx-auto mb-10">
+                <div className="flex items-start text-left bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <Mail className="w-5 h-5 text-blue-600 mt-0.5 mr-3 shrink-0" />
+                  <p className="text-sm text-blue-800 leading-relaxed">
+                    <strong>Notification sent:</strong> A confirmation of your Data Request Acceptance has been sent to your email. 
+                    <span className="block mt-1 font-medium opacity-80 underline underline-offset-2">Your Line People Leader / Line Manager has been Cc-ed on this communication.</span>
+                  </p>
+                </div>
+
+                <p className="text-sm">
+                  Your request for <strong>{formData.tableName}</strong> is now being routed to <strong>{formData.dataOwner}</strong> for final approval.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button 
+                  onClick={handleReset}
+                  className="w-full sm:w-auto px-8 py-3 bg-[#DA1710] text-white font-bold rounded-md hover:bg-[#b0130d] shadow-md transition-colors text-sm"
+                >
+                  Create Another Request
+                </button>
+                <button 
+                  className="w-full sm:w-auto px-8 py-3 border border-slate-200 text-slate-600 font-semibold rounded-md hover:bg-slate-50 transition-colors text-sm flex items-center justify-center"
+                >
+                  <Printer className="mr-2 w-4 h-4" /> Print Receipt
+                </button>
+              </div>
+            </div>
+
+            <p className="mt-8 text-slate-400 text-sm">
+              Returning to Home in <span className="font-bold">15 seconds</span>...
+            </p>
+          </div>
+        )}
+
+        <div className="mt-12 text-center">
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest">
+                Westpac Group Data Governance &bull; Internal Use Only
+            </p>
+        </div>
+      </main>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scale-in {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
+        .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+      `}} />
+    </div>
+  );
+}
